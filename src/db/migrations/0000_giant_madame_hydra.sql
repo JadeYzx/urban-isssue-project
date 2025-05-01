@@ -1,3 +1,4 @@
+CREATE TYPE "public"."issue_status" AS ENUM('open', 'in-progress', 'resolved');--> statement-breakpoint
 CREATE TABLE "accounts" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
@@ -19,10 +20,24 @@ CREATE TABLE "reports" (
 	"title" varchar(255) NOT NULL,
 	"description" text NOT NULL,
 	"category" varchar(50) NOT NULL,
-	"status" varchar(50) DEFAULT 'open',
-	"created_at" timestamp DEFAULT now(),
+	"status" "issue_status" DEFAULT 'open' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
 	"location" varchar(255),
-	"user_id" varchar(255) NOT NULL
+	"user_id" varchar(255) NOT NULL,
+	"upvotes" integer DEFAULT 0 NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "sessions" (
+	"id" text PRIMARY KEY NOT NULL,
+	"expires_at" timestamp NOT NULL,
+	"token" text NOT NULL,
+	"created_at" timestamp NOT NULL,
+	"updated_at" timestamp NOT NULL,
+	"ip_address" text,
+	"user_agent" text,
+	"user_id" text NOT NULL,
+	"impersonated_by" text,
+	CONSTRAINT "sessions_token_unique" UNIQUE("token")
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
@@ -49,4 +64,5 @@ CREATE TABLE "verifications" (
 	"updated_at" timestamp
 );
 --> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;

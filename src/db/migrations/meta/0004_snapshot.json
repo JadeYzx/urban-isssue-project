@@ -1,6 +1,6 @@
 {
-  "id": "e9992ec3-dc61-437e-aec5-2e453e1103cd",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "705c4e5e-e5c7-4437-907b-d76a01415fa6",
+  "prevId": "5ee78c91-b415-46af-bad9-c8d44e26bdbe",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -164,12 +164,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "user_name": {
+          "name": "user_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
         "upvotes": {
           "name": "upvotes",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "user_upvoted": {
+          "name": "user_upvoted",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},

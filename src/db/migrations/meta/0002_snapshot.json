@@ -1,6 +1,6 @@
 {
-  "id": "25e3836d-a44f-4ba2-b6f2-73825eac627f",
-  "prevId": "7a542697-bd83-4757-8f4a-4c889b6a6832",
+  "id": "b9241b04-5ba5-41ab-9d1d-bcc56632a030",
+  "prevId": "cd2aadfc-156c-4d90-9fde-1888bcf5c674",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -139,16 +139,17 @@
         },
         "status": {
           "name": "status",
-          "type": "varchar(50)",
+          "type": "issue_status",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "'open'"
         },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "location": {
@@ -162,6 +163,13 @@
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
+        },
+        "upvotes": {
+          "name": "upvotes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         }
       },
       "indexes": {},
@@ -398,7 +406,17 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.issue_status": {
+      "name": "issue_status",
+      "schema": "public",
+      "values": [
+        "open",
+        "in-progress",
+        "resolved"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

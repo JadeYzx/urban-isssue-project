@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toggleLike } from '@/actions/toggleLike'
+import { updateReportStatus } from '@/actions/updateReportstatus'
+import { useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { Toaster } from "sonner";
+import { deleteReport } from "@/actions/deleteReport";
+import { toast } from "sonner";
 
 // Define TypeScript interfaces
 interface Category {
@@ -37,17 +46,16 @@ interface Comment {
 }
 
 interface Issue {
-  id: string;
+  id: number;
   title: string;
   description: string;
   category: string;
-  reportDate: Date;
-  reporterId: string;
-  reporterName: string;
+  createdAt: Date;
+  userId: string;
   status: 'open' | 'in-progress' | 'resolved';
-  imageUrl?: string;
+  userName: string;
   upvotes: number;
-  commentCount: number;
+  userUpvoted: String[];
 }
 
 interface IssueListProps {
@@ -55,51 +63,75 @@ interface IssueListProps {
   categories: Category[];
   currentUserId?: string;
   isAdmin?: boolean;
-  onUpdateStatus: (id: string, status: 'open' | 'in-progress' | 'resolved') => void;
-  onDelete: (id: string) => void;
-  onEdit: (id: string) => void;
-  onUpvote: (id: string) => void;
-  onViewComments: (id: string) => void;
-  comments?: Record<string, Comment[]>;
-  onAddComment?: (issueId: string, text: string, replyTo?: string) => void;
-  onLikeComment?: (issueId: string, commentId: string) => void;
-  onDeleteComment?: (issueId: string, commentId: string) => void;
-  userUpvotes?: string[];
-  activeIssueComments?: string | null;
+  activeTab: string;
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
+  issueId: number;
+  setIssueId: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const IssueList = ({
   issues,
   categories,
   currentUserId,
-  isAdmin = false,
-  onUpdateStatus,
-  onDelete,
-  onEdit,
-  onUpvote,
-  onViewComments,
-  comments = {},
-  onAddComment,
-  onLikeComment,
-  onDeleteComment,
-  userUpvotes = [],
-  activeIssueComments = null
+  isAdmin,
+  activeTab,
+  setActiveTab,
+  issueId,
+  setIssueId
 }: IssueListProps) => {
+  let sign = true;
+  if (currentUserId == "Null") sign = false;
+  const [signedin, setSignedin] = useState(sign);
+  const [isPending, startTransition] = useTransition()
   // Helper function to get category object from ID
   const getCategoryById = (categoryId: string): Category | null => {
     return categories.find(cat => cat.id === categoryId) || null;
   };
+  const router = useRouter()
 
   if (issues.length === 0) {
     return <p className="text-gray-500 text-center p-6">No issues reported yet. Be the first to report an urban issue!</p>;
   }
 
+const handleClick = async (issueId: number) => {
+  startTransition(() => {
+    toggleLike(issueId);
+    router.refresh();
+  });
+};
+
+  const handleEdit = (id : number) => {
+    setActiveTab("edit");
+    setIssueId(id)
+  }
+
+  const handleStatus = (id : number, status : 'open' | 'in-progress' | 'resolved') => {
+    startTransition(() => {
+      updateReportStatus(id, status)
+      router.refresh();
+    });
+  }
+
+  //delete issue function
+  const handleDelete = (issueId: number) => {
+    try {
+      startTransition(() => {
+        deleteReport(issueId); 
+        router.refresh();
+      });
+      toast.success("Deleted successfully");
+    } catch (err) {
+      toast.error("Delete failed");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {issues.map((issue) => {
         const issueCategory = getCategoryById(issue.category);
-        const canModify = isAdmin || issue.reporterId === currentUserId;
-        const hasUpvoted = userUpvotes.includes(issue.id);
+        const canModify = isAdmin || issue.userId === currentUserId;
+        let hasUpvoted = false;
+        if (currentUserId) hasUpvoted=issue.userUpvoted.includes(currentUserId);
         
         return (
           <Card 
@@ -117,7 +149,7 @@ const IssueList = ({
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                           <circle cx="12" cy="7" r="4"></circle>
                         </svg>
-                        <span>{issue.reporterName}</span>
+                        <span>{issue.userName}</span>
                       </div>
                       
                       <div className="flex items-center gap-1.5">
@@ -127,7 +159,7 @@ const IssueList = ({
                           <line x1="8" y1="2" x2="8" y2="6"></line>
                           <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
-                        <span>{format(new Date(issue.reportDate), 'MMM d, yyyy')}</span>
+                        <span>{format(new Date(issue.createdAt), 'MMM d, yyyy')}</span>
                       </div>
                       
                       {issueCategory && (
@@ -168,34 +200,33 @@ const IssueList = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-white dark:bg-slate-900 border rounded-md shadow-lg z-50 min-w-[8rem] overflow-hidden animate-in fade-in-80 p-1">
-                      <DropdownMenuItem onClick={() => onEdit(issue.id)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                      <DropdownMenuItem onClick={() => handleEdit(issue.id)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
                       </DropdownMenuItem>
                       
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-red-600 focus:text-red-600"
+                        onClick={() => handleDelete(issue.id)}
+                      > 
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                      </DropdownMenuItem>
                       {isAdmin && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onUpdateStatus(issue.id, 'open')}>
+                          <DropdownMenuItem onClick={() => handleStatus(issue.id, "open")} >
                             Mark as Open
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdateStatus(issue.id, 'in-progress')}>
+                          <DropdownMenuItem onClick={() => handleStatus(issue.id, "in-progress")} >
                             Mark as In Progress
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdateStatus(issue.id, 'resolved')}>
+                          <DropdownMenuItem onClick={() => handleStatus(issue.id, "resolved")} >
                             Mark as Resolved
                           </DropdownMenuItem>
                         </>
                       )}
-                      
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => onDelete(issue.id)}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -207,19 +238,12 @@ const IssueList = ({
                 {issue.description}
               </p>
               
-              {issue.imageUrl && (
-                <div className="mt-4 border rounded-lg overflow-hidden shadow-sm">
-                  <img 
-                    src={issue.imageUrl} 
-                    alt={`Image for ${issue.title}`} 
-                    className="w-full max-h-80 object-cover"
-                  />
-                </div>
-              )}
+              
             </CardContent>
             
             <CardFooter className="py-2 px-4 bg-gray-50 flex flex-col">
               <div className="flex items-center gap-4 w-full">
+              {signedin && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -231,7 +255,8 @@ const IssueList = ({
                             ? "text-blue-600" 
                             : "text-gray-500 hover:text-blue-600"
                         }`}
-                        onClick={() => onUpvote(issue.id)}
+                        onClick={() => handleClick(issue.id)}
+                        disabled={isPending}
                       >
                         <ThumbsUp className="h-4 w-4" />
                         <span>{issue.upvotes}</span>
@@ -241,7 +266,7 @@ const IssueList = ({
                       <p>{hasUpvoted ? "Remove upvote" : "Upvote this issue"}</p>
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
+                </TooltipProvider>)}
                 
                 <TooltipProvider>
                   <Tooltip>
@@ -250,10 +275,8 @@ const IssueList = ({
                         variant="ghost" 
                         size="sm" 
                         className="flex items-center gap-1 text-gray-500 hover:text-blue-600"
-                        onClick={() => onViewComments(issue.id)}
                       >
                         <MessageCircle className="h-4 w-4" />
-                        <span>{comments[issue.id]?.length || 0}</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="bg-white dark:bg-slate-900 border rounded-md shadow-lg">
@@ -263,100 +286,6 @@ const IssueList = ({
                 </TooltipProvider>
               </div>
               
-              {activeIssueComments === issue.id && (
-                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-md w-full scale-in">
-                  <h4 className="font-medium mb-2">Comments</h4>
-                  
-                  {comments[issue.id]?.length > 0 ? (
-                    <div className="space-y-3 mb-4">
-                      {comments[issue.id].map(comment => (
-                        <div key={comment.id} className="p-3 bg-white dark:bg-gray-700 rounded shadow-sm">
-                          <div className="flex justify-between text-xs text-gray-500 mb-2">
-                            <span className="font-medium">{comment.author}</span>
-                            <span>{format(new Date(comment.date), 'MMM d, yyyy h:mm a')}</span>
-                          </div>
-                          
-                          <p className="mb-2">
-                            {comment.replyTo && (
-                              <span className="text-blue-500 font-medium">@{comment.replyTo}: </span>
-                            )}
-                            {comment.text}
-                          </p>
-                          
-                          <div className="flex items-center gap-3 text-xs">
-                            <button 
-                              className={`flex items-center gap-1 ${
-                                comment.likedBy?.includes(currentUserId || '') 
-                                  ? "text-blue-600" 
-                                  : "text-gray-500 hover:text-blue-600"
-                              }`}
-                              onClick={() => onLikeComment?.(issue.id, comment.id)}
-                            >
-                              <ThumbsUp className="h-3 w-3" />
-                              <span>{comment.likes || 0}</span>
-                            </button>
-                            
-                            <button 
-                              className="text-gray-500 hover:text-blue-600"
-                              onClick={() => {
-                                const commentInput = document.getElementById(`comment-input-${issue.id}`) as HTMLInputElement;
-                                if (commentInput) {
-                                  commentInput.value = `@${comment.author}: `;
-                                  commentInput.focus();
-                                }
-                              }}
-                            >
-                              Reply
-                            </button>
-                            
-                            {(currentUserId === comment.author || isAdmin) && (
-                              <button 
-                                className="text-red-500 hover:text-red-600 ml-auto"
-                                onClick={() => onDeleteComment?.(issue.id, comment.id)}
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 mb-4">No comments yet.</p>
-                  )}
-                  
-                  {onAddComment && (
-                    <div className="mt-3">
-                      <form onSubmit={(e) => {
-                        e.preventDefault();
-                        const form = e.currentTarget;
-                        const input = form.elements.namedItem('comment') as HTMLInputElement;
-                        if (input.value.trim()) {
-                          // Check if it's a reply
-                          const replyMatch = input.value.match(/@(\w+):/);
-                          const replyTo = replyMatch ? replyMatch[1] : undefined;
-                          const commentText = replyMatch 
-                            ? input.value.slice(replyMatch[0].length).trim() 
-                            : input.value.trim();
-                            
-                          onAddComment(issue.id, commentText, replyTo);
-                          input.value = '';
-                        }
-                      }}>
-                        <div className="flex gap-2">
-                          <Input 
-                            id={`comment-input-${issue.id}`}
-                            name="comment"
-                            placeholder="Add a comment..." 
-                            className="flex-1"
-                          />
-                          <Button type="submit">Post</Button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-                </div>
-              )}
             </CardFooter>
           </Card>
         );

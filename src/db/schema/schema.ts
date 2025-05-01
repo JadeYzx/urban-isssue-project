@@ -1,5 +1,7 @@
-import { pgTable, serial, varchar, text, timestamp, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, serial, varchar, text, timestamp, boolean, pgEnum, integer } from 'drizzle-orm/pg-core'
 
+
+export const issueStatus = pgEnum("issue_status", ["open", "in-progress", "resolved"])
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text('name').notNull(),
@@ -19,10 +21,13 @@ export const reports = pgTable("reports", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
   category: varchar("category", { length: 50 }).notNull(),
-  status: varchar("status", { length: 50 }).default('open'),
-  createdAt: timestamp("created_at").defaultNow(),
+  status: issueStatus("status").notNull().default("open"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   location: varchar("location", { length: 255 }),
-  userId: varchar("user_id", { length: 255 }).notNull()
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  userName: varchar("user_name", { length: 255 }).notNull(),
+  upvotes: integer("upvotes").notNull().default(0),
+  userUpvoted: text("user_upvoted").array().notNull(),
 })
 
 export const accounts = pgTable("accounts", {

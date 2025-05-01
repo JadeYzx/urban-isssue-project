@@ -1,0 +1,1 @@
+ALTER TABLE "reports" ALTER COLUMN "user_upvoted" SET NOT NULL;

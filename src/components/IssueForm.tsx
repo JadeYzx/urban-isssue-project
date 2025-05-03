@@ -52,7 +52,6 @@ const IssueForm = ({
           await editReport(issueId, formData)
         }
         else await createReport(formData)
-        setActiveTab(activeTab)
         setActiveTab("view")
         startTransition(() => router.refresh()) // show latest report in UI
         toast.success("Added report successfully");

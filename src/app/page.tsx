@@ -21,7 +21,7 @@ interface Issue {
   status: 'open' | 'in-progress' | 'resolved';
   userName: string;
   upvotes: number;
-  userUpvoted: String[];
+  userUpvoted: string[];
 }
 
 
@@ -57,7 +57,7 @@ export default async function Home() {
     if (!acc[comment.issueId]) {
       acc[comment.issueId] = [];
     }
-    acc[comment.issueId].push(comment as any); 
+    acc[comment.issueId].push(comment as Comment); 
     return acc;
   }, {} as Record<number, Comment[]>);
 

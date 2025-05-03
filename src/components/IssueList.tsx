@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreHorizontal, X, MessageCircle, ThumbsUp, Edit, Trash2 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MoreHorizontal, MessageCircle, ThumbsUp, Edit, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,6 @@ import { addComment } from "@/actions/addComment"
 import { updateReportStatus } from '@/actions/updateReportstatus'
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Toaster } from "sonner";
 import { deleteReport } from "@/actions/deleteReport";
 import { deleteReply } from "@/actions/deleteReply";
 import { toggleCommentLike } from '@/actions/toggleCommentLike';
@@ -51,7 +50,7 @@ interface Issue {
   status: 'open' | 'in-progress' | 'resolved';
   userName: string;
   upvotes: number;
-  userUpvoted: String[];
+  userUpvoted: string[];
 }
 
 interface IssueListProps {
@@ -83,7 +82,7 @@ const IssueList = ({
   const [signedin, setSignedin] = useState(sign);
   const [isPending, startTransition] = useTransition();
   const [activeIssueComment, setActiveIssueComment] = useState<number | null>(null);
-  
+  const [commentText, setCommentText] = useState("");
 
 
   // Helper function to get category object from ID
@@ -146,8 +145,6 @@ const handleCommentLike = async (commentId: number) => {
       toast.error("Delete failed");
     }
   };
-
-const [commentText, setCommentText] = useState("");
 
 const handleAddComment = async (issueId: number, text: string) => {
   if (text.trim() === "") return;

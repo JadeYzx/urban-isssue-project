@@ -52,11 +52,14 @@ const IssueForm = ({
           await editReport(issueId, formData)
         }
         else await createReport(formData)
+        setActiveTab(activeTab)
         setActiveTab("view")
         startTransition(() => router.refresh()) // show latest report in UI
+        toast.success("Added report successfully");
         return { success: true }
-      } catch (err: any) {
-        return { error: err.message ?? "Failed to create report" }
+      } catch {
+        toast.success("Failed to add report");
+        return { success: false}
       }
     },
     { success: false }
@@ -70,8 +73,8 @@ const IssueForm = ({
   const [description, setDescription] = useState('');
   const [reportDate, setReportDate] = useState<Date | null>(new Date());
   const [category, setCategory] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // const [imageFile, setImageFile] = useState<File | null>(null);
+  // const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   // 3. Use useEffect unconditionally, with the conditional logic inside
   useEffect(() => {
@@ -101,19 +104,19 @@ const IssueForm = ({
   if (issueId && !report) {
     return <div>Loading report...</div>;
   }
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
+  // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     setImageFile(file);
       
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  //     // Create preview
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setImagePreview(reader.result as string);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
 
   return (
     <form className="border p-6 rounded-xl shadow-lg bg-white dark:bg-gray-800 space-y-6" action={formAction}>
@@ -180,7 +183,7 @@ const IssueForm = ({
       </div>
 
       {/* Image Upload */}
-      <div className="space-y-1">
+      {/* <div className="space-y-1">
         <Label htmlFor="image">Image (Optional)</Label>
         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 transition-colors hover:border-blue-400 dark:hover:border-blue-500">
           <Input
@@ -223,7 +226,7 @@ const IssueForm = ({
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Submit Button */}
       {isPending && (

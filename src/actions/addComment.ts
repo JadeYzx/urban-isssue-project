@@ -3,7 +3,6 @@
 import { db } from "@/db";
 import { comments } from "@/db/schema/schema"; 
 import { auth } from "@/lib/auth";
-import { AuthForm } from "@daveyplate/better-auth-ui";
 import { headers } from "next/headers";
 
 export async function addComment(issueId: number, text: string) {

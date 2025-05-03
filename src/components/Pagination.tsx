@@ -28,7 +28,7 @@ const Pagination: React.FC<PaginationProps> = ({
     } else {
       // Otherwise, show a sliding window centered around current page
       let startPage = Math.max(1, currentPage - 2);
-      let endPage = Math.min(totalPages, startPage + maxPagesShown - 1);
+      const endPage = Math.min(totalPages, startPage + maxPagesShown - 1);
       
       // Adjust start if we're near the end
       if (endPage === totalPages) {

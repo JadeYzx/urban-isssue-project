@@ -46,7 +46,7 @@ interface Issue {
   status: 'open' | 'in-progress' | 'resolved';
   userName: string;
   upvotes: number;
-  userUpvoted: String[];
+  userUpvoted: string[];
 }
 
 export default function IssuePageClient({ 

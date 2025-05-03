@@ -5,7 +5,6 @@ import { reports } from "@/db/schema/schema"
 import { eq } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { sql } from "drizzle-orm"
 
 export async function toggleLike(reportId: number) {
   const session = await auth.api.getSession({

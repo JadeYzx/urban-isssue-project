@@ -4,7 +4,7 @@ import { db } from "@/db"
 import { reports } from "@/db/schema/schema"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { eq, and, not } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 
 export const createReport = async (data: FormData) => {
   console.log("Create report called!")

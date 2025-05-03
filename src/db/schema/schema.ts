@@ -66,3 +66,15 @@ export const sessions = pgTable("sessions", {
   userId: text('user_id').notNull().references(()=> users.id, { onDelete: 'cascade' }),
   impersonatedBy: text('impersonated_by')
 });
+
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  issueId: integer("issue_id").notNull().references(() => reports.id, { onDelete: "cascade" }),
+  text: text("text").notNull(),
+  author: text("author").notNull(),
+  authorId: text("author_id").notNull(),
+  date: timestamp("date").notNull(),
+  likes: integer("likes").notNull().default(0),
+  likedBy: text("liked_by").array().notNull(),
+  replyTo: text("reply_to")
+})

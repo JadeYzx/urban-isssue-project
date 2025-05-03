@@ -1,11 +1,12 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreHorizontal, X, MessageCircle, ThumbsUp, Edit, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -21,12 +22,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toggleLike } from '@/actions/toggleLike'
+import { addComment } from "@/actions/addComment"
 import { updateReportStatus } from '@/actions/updateReportstatus'
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Toaster } from "sonner";
 import { deleteReport } from "@/actions/deleteReport";
+import { deleteReply } from "@/actions/deleteReply";
+import { toggleCommentLike } from '@/actions/toggleCommentLike';
 import { toast } from "sonner";
+import { Comment } from '@/app/types';
 
 // Define TypeScript interfaces
 interface Category {
@@ -35,15 +40,6 @@ interface Category {
   color: string;
 }
 
-interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  date: Date;
-  likes: number;
-  likedBy: string[];
-  replyTo?: string;
-}
 
 interface Issue {
   id: number;
@@ -67,7 +63,9 @@ interface IssueListProps {
   setActiveTab: React.Dispatch<React.SetStateAction<string>>;
   issueId: number;
   setIssueId: React.Dispatch<React.SetStateAction<number>>;
+  comments?: Record<number, Comment[]>;
 }
+
 
 const IssueList = ({
   issues,
@@ -77,12 +75,17 @@ const IssueList = ({
   activeTab,
   setActiveTab,
   issueId,
-  setIssueId
+  setIssueId,
+  comments ={}
 }: IssueListProps) => {
   let sign = true;
   if (currentUserId == "Null") sign = false;
   const [signedin, setSignedin] = useState(sign);
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = useTransition();
+  const [activeIssueComment, setActiveIssueComment] = useState<number | null>(null);
+  
+
+
   // Helper function to get category object from ID
   const getCategoryById = (categoryId: string): Category | null => {
     return categories.find(cat => cat.id === categoryId) || null;
@@ -99,6 +102,13 @@ const handleClick = async (issueId: number) => {
     router.refresh();
   });
 };
+
+const handleCommentLike = async (commentId: number) => {
+  startTransition(() => {
+    toggleCommentLike(commentId);
+    router.refresh();
+  });
+}
 
   const handleEdit = (id : number) => {
     setActiveTab("edit");
@@ -123,6 +133,54 @@ const handleClick = async (issueId: number) => {
     } catch (err) {
       toast.error("Delete failed");
     }
+  };
+
+  const handleDeleteReply = (commentId: number, issueId: number) => {
+    try {
+      startTransition(() => {
+        deleteReply(commentId); 
+        router.refresh();
+      });
+      toast.success("Deleted successfully");
+    } catch (err) {
+      toast.error("Delete failed");
+    }
+  };
+
+const [commentText, setCommentText] = useState("");
+
+const handleAddComment = async (issueId: number, text: string) => {
+  if (text.trim() === "") return;
+  
+  try {
+    
+    await addComment(issueId, text);
+    // Update local comments state
+    router.refresh();
+    toast.success("added comment successfully");
+    setActiveIssueComment(issueId);
+    setCommentText("");
+  } catch (error) {
+    toast.error("failed to add comment");
+    console.error(error);
+  }
+};
+
+//show comments if clicked and if already clicked hide comments
+  const handleViewComments = (issueId: number) => {
+    if (activeIssueComment === issueId) {
+      setActiveIssueComment(null);
+    } else {
+      setActiveIssueComment(issueId);
+    }
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
   };
 
   return (
@@ -267,24 +325,134 @@ const handleClick = async (issueId: number) => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>)}
-                
+                {signedin && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="flex items-center gap-1 text-gray-500 hover:text-blue-600"
+                        className={`flex items-center gap-1 transition-all duration-200 hover:scale-105 
+                          ${activeIssueComment === issue.id 
+                            ? "text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" 
+                            : "text-gray-500 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          }`}
+                        onClick={() => handleViewComments(issue.id)}
                       >
                         <MessageCircle className="h-4 w-4" />
+                        <span>{comments[issue.id]?.length || 0}</span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-white dark:bg-slate-900 border rounded-md shadow-lg">
-                      <p>View comments</p>
+                    <TooltipContent className="bg-white dark:bg-slate-900 border rounded-md shadow-lg transition-all duration-200 hover:-translate-y-1">
+                      <p>{activeIssueComment === issue.id ? "Hide comments" : "View comments"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                )}
               </div>
+
+              {activeIssueComment === issue.id && (
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/80 rounded-md w-full scale-in">
+                  <h4 className="font-medium mb-2">Comments</h4>
+                  
+                  {comments[issue.id]?.length > 0 ? (
+                    <div className="space-y-3 mb-4">
+                      {comments[issue.id].map(comment => {
+                        const commentUser = comment.authorId
+                        
+                        return (
+                          <div key={comment.id} className="p-3 bg-white dark:bg-gray-700 rounded shadow-sm transition-all duration-200 hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <div className="flex justify-between text-xs text-gray-500 mb-2">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarFallback className="bg-blue-600 text-white text-[8px]">
+                                    {getInitials(comment.author)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{comment.author}</span>
+                              </div>
+                              <span>{format(new Date(comment.date), 'MMM d, yyyy h:mm a')}</span>
+                            </div>
+                            
+                            <p className="mb-2">
+                              {comment.replyTo && (
+                                <span className="text-blue-500 font-medium">@{comment.replyTo}: </span>
+                              )}
+                              {comment.text}
+                            </p>
+                            
+                            <div className="flex items-center gap-3 text-xs">
+                              <button
+                                className={`flex items-center gap-1 transition-all duration-200 hover:scale-110 ${
+                                  comment.likedBy?.includes(currentUserId || '') 
+                                    ? "text-blue-600"
+                                    : "text-gray-500 hover:text-blue-600"
+                                }`}
+                                onClick ={() => {handleCommentLike(comment.id)}}
+                              >
+                                <ThumbsUp className="h-3 w-3" />
+                                <span>{comment.likes || 0}</span>
+                              </button>
+
+                              <button
+                                className="text-gray-500 hover:text-blue-600 transition-all duration-200 hover:underline"
+                                onClick={() => {
+                                  const commentInput = document.getElementById(`comment-input-${issue.id}`) as HTMLInputElement;
+                                  if (commentInput) {
+                                    commentInput.value = `@${comment.author}: `;
+                                    commentInput.focus();
+                                  }
+                                }}
+                              >
+                                Reply
+                              </button>
+
+                              {(currentUserId === comment.authorId || isAdmin) && (
+                                <button
+                                  className="text-red-500 hover:text-red-600 hover:scale-110 transition-all duration-200 ml-auto"
+                                  onClick ={() => {handleDeleteReply(comment.id, issue.id)}}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 mb-4">No comments yet.</p>
+                  )}
+                    <div className="mt-3">
+                    <form
+                        onSubmit={(e) => {
+                          e.preventDefault(); 
+                          if (commentText.trim() !== "") {
+                            handleAddComment(issue.id, commentText);
+                          }
+                        }}
+                        >        
+                        <div className="flex gap-2">
+                          <Input 
+                            id={`comment-input-${issue.id}`}
+                            name="comment"
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Add a comment..." 
+                            className="flex-1"
+                          />
+                          <Button 
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                           
+                          >
+                            Post
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
+                </div>
+              )}
               
             </CardFooter>
           </Card>

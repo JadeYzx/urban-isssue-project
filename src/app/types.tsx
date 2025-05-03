@@ -6,14 +6,15 @@ export interface Category {
 }
 
 export interface Comment {
-  id: string;
+  date: Date;
+  id: number;
+  issueId: number;
   text: string;
   author: string;
   authorId: string;
-  date: Date;
   likes: number;
   likedBy: string[];
-  replyTo?: string;
+  replyTo: string | null;
 }
 
 export interface Issue {

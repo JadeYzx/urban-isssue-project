@@ -15,6 +15,18 @@ CREATE TABLE "accounts" (
 	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "comments" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"issue_id" integer NOT NULL,
+	"text" text NOT NULL,
+	"author" text NOT NULL,
+	"author_id" text NOT NULL,
+	"date" timestamp NOT NULL,
+	"likes" integer DEFAULT 0 NOT NULL,
+	"liked_by" text[] NOT NULL,
+	"reply_to" text
+);
+--> statement-breakpoint
 CREATE TABLE "reports" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"title" varchar(255) NOT NULL,
@@ -24,7 +36,9 @@ CREATE TABLE "reports" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"location" varchar(255),
 	"user_id" varchar(255) NOT NULL,
-	"upvotes" integer DEFAULT 0 NOT NULL
+	"user_name" varchar(255) NOT NULL,
+	"upvotes" integer DEFAULT 0 NOT NULL,
+	"user_upvoted" text[] NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "sessions" (
@@ -65,4 +79,5 @@ CREATE TABLE "verifications" (
 );
 --> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "comments" ADD CONSTRAINT "comments_issue_id_reports_id_fk" FOREIGN KEY ("issue_id") REFERENCES "public"."reports"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;

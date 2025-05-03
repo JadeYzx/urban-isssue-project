@@ -13,7 +13,7 @@ import { Toaster } from "sonner";
 import { X, ArrowUp } from "lucide-react";
 import { ThemeToggleClient } from "@/components/ThemeToggleClient";
 import { useScrollToTop } from "@/app/hooks/useScrollToTop";
-import { Category, User } from "@/app/types";
+import { Category, User, Comment  } from "@/app/types";
 import { toast } from "sonner";
 import { deleteReport } from "@/actions/deleteReport";
 import { toggleLike } from "@/actions/toggleLike";
@@ -32,7 +32,8 @@ interface IssuePageClientProps {
   reporters: Reporter[];
   currentYear: number;
   currentUserId: string;
-  isAdmin: boolean
+  isAdmin: boolean;
+  comments: Record<number, Comment[]>;
 }
 
 interface Issue {
@@ -54,7 +55,8 @@ export default function IssuePageClient({
   reporters,
   currentYear,
   currentUserId,
-  isAdmin
+  isAdmin,
+comments
 }: IssuePageClientProps) {
   const [isClient, setIsClient] = useState(false);
   
@@ -65,7 +67,6 @@ export default function IssuePageClient({
   const [reporterFilter, setReporterFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("view");
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
-  const [activeIssueComments, setActiveIssueComments] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [issueId, setIssueId] = useState(-1);
 
@@ -220,9 +221,7 @@ export default function IssuePageClient({
     }
   };
 
-  const handleViewComments = (id: string) => {
-    setActiveIssueComments(id === activeIssueComments ? null : id);
-  };
+  const typedComments: Record<number, Comment[]> = comments;
 
   // Function to clear all filters
   const clearAllFilters = () => {
@@ -431,6 +430,8 @@ export default function IssuePageClient({
                     setActiveTab={setActiveTab}
                     issueId={issueId}
                     setIssueId={setIssueId}
+                    comments={typedComments}
+                    
                   />
                     
                     {/* Pagination Component */}

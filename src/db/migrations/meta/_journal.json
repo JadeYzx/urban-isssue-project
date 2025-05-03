@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1745965635809,
-      "tag": "0000_giant_madame_hydra",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1745965663913,
-      "tag": "0001_lyrical_ricochet",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1745965703688,
-      "tag": "0002_sloppy_impossible_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1745966353751,
-      "tag": "0003_loose_toro",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1746030530588,
-      "tag": "0004_warm_owl",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1746031179649,
-      "tag": "0005_woozy_fantastic_four",
+      "when": 1746232065366,
+      "tag": "0000_stale_the_fallen",
       "breakpoints": true
     }
   ]

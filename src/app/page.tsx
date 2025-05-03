@@ -2,6 +2,7 @@ import IssuePageClient from "@/components/IssuePageClient";
 import { db } from "@/db";
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
+import { Comment } from "@/app/types"; 
 
 // Types
 interface Category {
@@ -22,6 +23,7 @@ interface Issue {
   upvotes: number;
   userUpvoted: String[];
 }
+
 
 export default async function Home() {
   // Demo categories
@@ -47,6 +49,18 @@ export default async function Home() {
 
   let userId = session?.user?.id
 
+
+  const allComments = await db.query.comments.findMany();
+
+  
+  const commentsGrouped = allComments.reduce((acc, comment) => {
+    if (!acc[comment.issueId]) {
+      acc[comment.issueId] = [];
+    }
+    acc[comment.issueId].push(comment as any); 
+    return acc;
+  }, {} as Record<number, Comment[]>);
+
   if (!userId) {
     userId = "Null"
   }
@@ -64,6 +78,7 @@ export default async function Home() {
       currentYear={new Date().getFullYear()}
       currentUserId={userId}
       isAdmin = {isAdmin}
+      comments= {commentsGrouped} // Pass the grouped
     />
   );
 }

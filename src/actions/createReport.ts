@@ -28,6 +28,14 @@ export const createReport = async (data: FormData) => {
   if (!title || !description || !category) {
     throw new Error("Missing required fields")
   }
+  
+  const reportDateRaw = data.get("reportDate")?.toString()
+  let reportDate
+  if (!reportDateRaw) {
+    reportDate = new Date()
+  } else {
+    reportDate = new Date(reportDateRaw)
+  }
 
   await db.insert(reports).values({
     title,
@@ -37,7 +45,7 @@ export const createReport = async (data: FormData) => {
     userId,
     userName,
     upvotes: 0,
-    createdAt: new Date(),
+    createdAt: reportDate,
     userUpvoted: [] as string[]
   })
 }
@@ -72,6 +80,16 @@ export async function editReport(/* */issueId: number, data: FormData) {
     const title = data.get("title")?.toString()
     const description = data.get("description")?.toString()
     const category = data.get("category")?.toString()
+    const reportDateRaw = data.get("reportDate")?.toString()
+    let reportDate
+    console.log("did")
+    if (!reportDateRaw) {
+      console.log("here")
+      reportDate = new Date()
+    } else {
+      reportDate = new Date(reportDateRaw)
+      console.log("not")
+    }
   
     // Update only if the todo belongs to the authenticated user
     const result = await db
@@ -80,7 +98,7 @@ export async function editReport(/* */issueId: number, data: FormData) {
         title: title,
         description: description,
         category: category,
-        createdAt: new Date()
+        createdAt: reportDate
       })
       .where(eq(reports.id, issueId))
       .returning()

@@ -90,7 +90,8 @@ comments
     }
     
     return matchesCategory && matchesStatus && matchesReporter && matchesDateRange;
-  });
+  })
+  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   
   // Pagination logic
   const totalPages = Math.max(1, Math.ceil(filteredIssues.length / ISSUES_PER_PAGE));

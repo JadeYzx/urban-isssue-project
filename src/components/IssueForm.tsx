@@ -48,17 +48,27 @@ const IssueForm = ({
   const [formState, formAction] = useActionState<FormState, FormData>(
     async (_prevState, formData) => {
       try {
+        if (!category) {
+          toast.success("Please enter a category");
+          return {success: false}
+        }
+        let msg
         if (issueId) {
           await editReport(issueId, formData)
+          msg = "Edited report successfully"
         }
-        else await createReport(formData)
+        else {
+          await createReport(formData)
+          msg = "Added report successfully"
+        }
         setActiveTab("view")
         startTransition(() => router.refresh()) // show latest report in UI
-        toast.success("Added report successfully");
+        toast.success(msg);
         return { success: true }
-      } catch {
-        toast.success("Failed to add report");
-        return { success: false}
+      } catch (err: unknown) {
+        toast.success("Failed to add report, please sign in");
+        router.push('/auth/sign-in');
+        return { success: false }
       }
     },
     { success: false }
@@ -167,7 +177,7 @@ const IssueForm = ({
             </SelectContent>
           </Select>
           {/* Hidden input to submit category */}
-          <input type="hidden" name="category" value={category ?? ''} />
+          <input type="hidden" name="category" value={category ?? ''} required/>
         </div>
 
         <div className="space-y-1">
@@ -177,6 +187,11 @@ const IssueForm = ({
             date={reportDate}
             onDateChange={setReportDate}
             className="w-full border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 transition-shadow"
+          />
+          <input
+            type="hidden"
+            name="reportDate"
+            value={reportDate?.toISOString() ?? ""}
           />
         </div>
       </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -313,7 +312,7 @@ const IssueFilter = ({
                   name.toLowerCase().startsWith(reporterSearchQuery.toLowerCase())
                 ).length === 0 && (
                   <div className="px-3 py-2 text-gray-500 dark:text-gray-400 italic">
-                    No reporters found starting with "{reporterSearchQuery}"
+                    No reporters found starting with &quot;{reporterSearchQuery}&quot;
                   </div>
                 )}
               </div>
